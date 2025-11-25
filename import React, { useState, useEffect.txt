@@ -62,12 +62,14 @@ import {
 } from 'firebase/firestore';
 
 // --- FIREBASE INITIALIZATION ---
-const firebaseConfig = JSON.parse(__firebase_config);
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
+const firebaseConfig = {
+    apiKey: "AIzaSyAduzE7GY7dQdrImZ93LEps6PYrhEfxEI8",
+    authDomain: "lifeos-app-8b8a0.firebaseapp.com",
+    projectId: "lifeos-app-8b8a0",
+    storageBucket: "lifeos-app-8b8a0.firebasestorage.app",
+    messagingSenderId: "531558082546",
+    appId: "1:531558082546:web:34a8097ae6a46d5b17ed6b",
+    measurementId: "G-JX649WJGXB"
 // --- THEMES ---
 const THEMES = {
   warm: { 
@@ -758,4 +760,5 @@ export default function App() {
       </main>
     </div>
   );
+
 }
