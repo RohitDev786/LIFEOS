@@ -1,0 +1,761 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Check, 
+  Calendar as CalendarIcon, 
+  Layout, 
+  BarChart2, 
+  BookOpen, 
+  Plus, 
+  Trash2, 
+  Clock, 
+  Target,
+  Menu, 
+  X,
+  Zap,
+  TrendingUp,
+  ChevronDown,
+  ChevronUp,
+  Play,
+  Pause,
+  RefreshCw,
+  Activity,
+  Droplet,
+  Heart,
+  Moon,
+  User,
+  ArrowRight,
+  Shield,
+  Lock,
+  Settings,
+  Smartphone,
+  Coffee,
+  Quote,
+  ChevronLeft,
+  ChevronRight,
+  PieChart,
+  Bell,
+  ToggleLeft,
+  ToggleRight,
+  Table,
+  ListTodo,
+  Dumbbell
+} from 'lucide-react';
+
+// --- FIREBASE IMPORTS ---
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, 
+  signInAnonymously, 
+  signInWithCustomToken, 
+  onAuthStateChanged 
+} from 'firebase/auth';
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  setDoc, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  onSnapshot,
+  getDoc
+} from 'firebase/firestore';
+
+// --- FIREBASE INITIALIZATION ---
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+// --- THEMES ---
+const THEMES = {
+  warm: { 
+    bg: "bg-[#FFF7ED]", card: "bg-white", text: "text-[#7C2D12]", subtext: "text-[#C2410C]", 
+    primary: "bg-[#FDBA74]", accent: "bg-[#EA580C]", accentText: "text-[#EA580C]", 
+    border: "border-[#FFEDD5]", gradient: "from-[#F97316] to-[#C2410C]", buttonText: "text-white"
+  },
+  sage: { 
+    bg: "bg-[#F0FDF4]", card: "bg-white", text: "text-[#14532D]", subtext: "text-[#4ADE80]", 
+    primary: "bg-[#86EFAC]", accent: "bg-[#16A34A]", accentText: "text-[#16A34A]", 
+    border: "border-[#BBF7D0]", gradient: "from-[#22c55e] to-[#166534]", buttonText: "text-white"
+  },
+  ocean: { 
+    bg: "bg-[#EFF6FF]", card: "bg-white", text: "text-[#1E3A8A]", subtext: "text-[#60A5FA]", 
+    primary: "bg-[#93C5FD]", accent: "bg-[#2563EB]", accentText: "text-[#2563EB]", 
+    border: "border-[#DBEAFE]", gradient: "from-[#3B82F6] to-[#1D4ED8]", buttonText: "text-white"
+  }
+};
+
+// --- DATA ---
+const QUOTES = [
+  "Success is the sum of small efforts, repeated day in and day out.",
+  "Your future is created by what you do today, not tomorrow.",
+  "Discipline is doing what needs to be done, even if you don't want to.",
+  "Dream big. Start small. Act now.",
+  "Focus on the step in front of you, not the whole staircase."
+];
+
+// Updated Workouts List
+const WORKOUTS = [
+  { id: 1, title: "Morning Stretch", duration: 300, icon: "☀️", desc: "5 min wake up flow" },
+  { id: 2, title: "Full Body HIIT", duration: 900, icon: "💪", desc: "15 min intense full body workout" },
+  { id: 3, title: "Quick Abs", duration: 420, icon: "🔥", desc: "7 min core strength blast" },
+  { id: 4, title: "Yoga & Meditation", duration: 1800, icon: "🧘", desc: "30 min mindfulness & flexibility" }
+];
+
+// --- 1. LOGIN ---
+const LoginScreen = ({ onLogin, loading }) => {
+  const [identifier, setIdentifier] = useState(""); 
+  const [name, setName] = useState("");
+  const [gender, setGender] = useState("");
+  const [isSecure, setIsSecure] = useState(false);
+
+  useEffect(() => { setTimeout(() => setIsSecure(true), 1000); }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#FFF7ED] p-4 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-96 h-96 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-yellow-200 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
+
+      <div className="bg-white/60 backdrop-blur-xl border border-orange-100 p-8 rounded-3xl shadow-2xl max-w-md w-full relative z-10">
+        <div className={`absolute top-4 right-4 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${isSecure ? 'text-green-600' : 'text-orange-400'}`}>
+          <Shield size={12} /> {isSecure ? 'Cloud Secured' : 'Connecting...'}
+        </div>
+
+        <div className="text-center mb-8 mt-4">
+          <div className="w-16 h-16 bg-orange-500 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-lg text-white">
+            <Layout size={32} />
+          </div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">LifeOS Pro</h1>
+          <p className="text-gray-500">Student Edition</p>
+        </div>
+
+        <div className="space-y-5">
+           <input 
+             type="text" 
+             value={identifier}
+             onChange={(e) => setIdentifier(e.target.value)}
+             className="w-full bg-white border border-orange-100 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-orange-400 outline-none"
+             placeholder="Mobile Number / Email"
+           />
+           <input 
+             type="text" 
+             value={name}
+             onChange={(e) => setName(e.target.value)}
+             className="w-full bg-white border border-orange-100 rounded-xl px-4 py-3 text-gray-700 focus:ring-2 focus:ring-orange-400 outline-none"
+             placeholder="Display Name"
+           />
+           <div className="grid grid-cols-2 gap-4">
+              <button onClick={() => setGender('male')} className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${gender === 'male' ? 'bg-orange-500 text-white' : 'bg-white text-gray-500'}`}>
+                <User size={24} /><span className="font-bold">Male</span>
+              </button>
+              <button onClick={() => setGender('female')} className={`p-4 rounded-xl border transition-all flex flex-col items-center gap-2 ${gender === 'female' ? 'bg-orange-500 text-white' : 'bg-white text-gray-500'}`}>
+                <Heart size={24} /><span className="font-bold">Female</span>
+              </button>
+            </div>
+            <button 
+              onClick={() => identifier && name && gender && onLogin(name, gender)} 
+              disabled={!identifier || !name || !gender || loading} 
+              className="w-full bg-gray-800 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {loading ? 'Syncing...' : 'Get Started'} <ArrowRight size={20} />
+            </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- 2. NOTIFICATIONS ---
+const SystemNotification = ({ title, message, type, onClose }) => (
+  <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] animate-slide-down w-[90%] max-w-sm pointer-events-auto">
+    <div className="bg-white/90 backdrop-blur-2xl border border-gray-200 rounded-2xl shadow-2xl p-4 flex items-start gap-4 ring-1 ring-black/5">
+      <div className={`p-3 rounded-xl shrink-0 ${type === 'water' ? 'bg-blue-100 text-blue-600' : 'bg-pink-100 text-pink-600'}`}>
+        {type === 'water' ? <Droplet size={24} /> : <Heart size={24} />}
+      </div>
+      <div className="flex-1">
+        <h4 className="font-bold text-gray-800 text-sm uppercase">{title}</h4>
+        <p className="text-gray-600 text-sm mt-1">{message}</p>
+      </div>
+      <button onClick={onClose}><X size={16} className="text-gray-400" /></button>
+    </div>
+  </div>
+);
+
+// --- 3. WIDGETS ---
+const ClockQuoteWidget = ({ theme }) => {
+  const [time, setTime] = useState(new Date());
+  const [quote, setQuote] = useState(QUOTES[0]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(new Date()), 1000);
+    setQuote(QUOTES[new Date().getDate() % QUOTES.length]);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className={`bg-gradient-to-r ${theme.gradient} rounded-3xl p-6 md:p-8 text-white shadow-xl mb-8 flex flex-col md:flex-row items-center justify-between relative overflow-hidden`}>
+      <div className="z-10 text-center md:text-left mb-6 md:mb-0">
+         <h2 className="text-white/80 text-xs font-bold uppercase tracking-wider mb-1">Current Time</h2>
+         <div className="text-5xl md:text-6xl font-bold font-mono tracking-tighter">{time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+         <p className="text-white/90 font-medium mt-1">{time.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+      </div>
+      <div className="hidden md:block w-px h-24 bg-white/30 mx-8"></div>
+      <div className="z-10 md:max-w-sm text-center md:text-right">
+        <Quote size={20} className="inline-block mb-2 opacity-80" fill="currentColor"/>
+        <p className="text-lg font-medium italic opacity-95 leading-snug">"{quote}"</p>
+        <p className="text-xs font-bold uppercase mt-2 opacity-70 tracking-widest">Daily Motivation</p>
+      </div>
+      <div className="absolute right-0 top-0 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+    </div>
+  );
+};
+
+const CycleTracker = ({ theme, detailed = false }) => {
+  const [lastPeriod, setLastPeriod] = useState("");
+  const [cycleLength, setCycleLength] = useState(28);
+  const [currentDay, setCurrentDay] = useState(1);
+  const [phase, setPhase] = useState({ name: "Setup Required", tip: "Please enter dates below", color: "bg-gray-200" });
+
+  useEffect(() => {
+    if (lastPeriod) {
+      const start = new Date(lastPeriod);
+      const now = new Date();
+      const diffTime = Math.abs(now - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const dayInCycle = (diffDays % cycleLength) || 1; 
+      setCurrentDay(dayInCycle);
+
+      if (dayInCycle >= 1 && dayInCycle <= 5) {
+        setPhase({ name: "Menstrual Phase", tip: "Rest & Recharge. Eat dark chocolate 🍫.", color: "bg-rose-500", textColor: "text-rose-600", bgColor: "bg-rose-50" });
+      } else if (dayInCycle >= 6 && dayInCycle <= 14) {
+        setPhase({ name: "Follicular Phase", tip: "High Energy! ✨ Great time for workouts.", color: "bg-pink-400", textColor: "text-pink-600", bgColor: "bg-pink-50" });
+      } else if (dayInCycle >= 15 && dayInCycle <= 17) {
+        setPhase({ name: "Ovulation", tip: "Peak Confidence! 🌟 You are glowing.", color: "bg-purple-400", textColor: "text-purple-600", bgColor: "bg-purple-50" });
+      } else {
+        setPhase({ name: "Luteal Phase", tip: "Slow down. 🍵 Prioritize sleep.", color: "bg-orange-400", textColor: "text-orange-600", bgColor: "bg-orange-50" });
+      }
+    }
+  }, [lastPeriod, cycleLength]);
+
+  if (!lastPeriod) {
+    return (
+      <div className={`${theme.card} rounded-3xl p-6 shadow-sm border ${theme.border} mb-6`}>
+        <h3 className={`font-bold text-lg ${theme.text} mb-4 flex items-center gap-2`}><Moon size={20}/> Cycle Setup</h3>
+        <div className="space-y-4">
+          <div>
+            <label className={`text-xs font-bold ${theme.subtext} uppercase`}>Last Period Start Date</label>
+            <input type="date" onChange={(e) => setLastPeriod(e.target.value)} className={`w-full mt-2 p-3 rounded-xl border ${theme.border} ${theme.bg} outline-none ${theme.text}`} />
+          </div>
+          <div>
+            <label className={`text-xs font-bold ${theme.subtext} uppercase`}>Cycle Length</label>
+            <input type="number" value={cycleLength} onChange={(e) => setCycleLength(e.target.value)} className={`w-full mt-2 p-3 rounded-xl border ${theme.border} ${theme.bg} outline-none ${theme.text}`} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className={`relative overflow-hidden rounded-3xl p-6 shadow-sm border transition-all ${phase.bgColor} border-transparent mb-6`}>
+       <div className="relative z-10">
+         <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className={`text-xl font-bold flex items-center gap-2 ${phase.textColor}`}>
+                <Moon size={20} fill="currentColor" /> {phase.name}
+              </h3>
+              <p className={`${phase.textColor} opacity-80 text-sm font-medium`}>Day {currentDay} of {cycleLength}</p>
+            </div>
+            <Heart size={24} className={phase.textColor} fill="currentColor"/>
+         </div>
+         <div className="bg-white/60 backdrop-blur-md rounded-xl p-4 border border-white/40 shadow-sm mb-4">
+            <p className={`text-sm font-bold ${phase.textColor} leading-relaxed`}>"{phase.tip}"</p>
+         </div>
+         {detailed && (
+           <div className="mt-6 animate-fade-in">
+              <h4 className={`font-bold ${phase.textColor} mb-2`}>Current Cycle</h4>
+              <div className="flex items-center justify-between px-2">
+                {[currentDay-2, currentDay-1, currentDay, currentDay+1, currentDay+2].map((d, i) => (
+                  <div key={i} className="flex flex-col items-center gap-1">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                      i === 2 ? `${phase.color} text-white scale-125 shadow-md` : 'bg-white/50 text-gray-400'
+                    }`}>
+                      {d > 0 && d <= cycleLength ? d : '-'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+           </div>
+         )}
+       </div>
+    </div>
+  );
+};
+
+const TimetableWidget = ({ theme, schedule, onAddClass }) => {
+  const [day, setDay] = useState("Mon");
+  const [className, setClassName] = useState("");
+  const [time, setTime] = useState("09:00");
+  const [showInput, setShowInput] = useState(false);
+  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
+  return (
+    <div className={`${theme.card} rounded-3xl shadow-sm border ${theme.border} p-6 animate-fade-in h-full`}>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className={`text-2xl font-bold ${theme.text}`}>Class Schedule</h2>
+        <button onClick={() => setShowInput(!showInput)} className={`p-2 rounded-xl ${theme.bg} ${theme.accentText}`}><Plus size={20}/></button>
+      </div>
+      {showInput && (
+        <form onSubmit={(e) => { e.preventDefault(); onAddClass(day, className, time); setShowInput(false); }} className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <select value={day} onChange={(e) => setDay(e.target.value)} className="p-2 rounded-lg border text-sm"><option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option></select>
+            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="p-2 rounded-lg border text-sm" />
+            <input type="text" placeholder="Class Name" value={className} onChange={(e) => setClassName(e.target.value)} className="p-2 rounded-lg border text-sm" />
+          </div>
+          <button type="submit" className={`w-full py-2 rounded-lg ${theme.accent} text-white text-xs font-bold`}>Add Class</button>
+        </form>
+      )}
+      <div className="grid grid-cols-5 gap-2">
+        {days.map(d => (
+          <div key={d} className="flex flex-col gap-2">
+            <div className={`text-center text-xs font-bold ${theme.text} uppercase mb-2`}>{d}</div>
+            {schedule.filter(s => s.day === d).sort((a,b) => a.time.localeCompare(b.time)).map((cls, idx) => (
+              <div key={idx} className={`p-2 rounded-lg text-[10px] font-bold text-center break-words ${
+                idx % 2 === 0 ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+              }`}>
+                <div className="opacity-70 mb-0.5">{cls.time}</div>
+                {cls.title}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ProgressReport = ({ theme, completedTasks }) => (
+  <div className={`${theme.card} rounded-3xl shadow-sm border ${theme.border} p-6 mb-6`}>
+    <div className="flex items-center justify-between mb-6">
+      <h3 className={`font-bold text-lg ${theme.text} flex items-center gap-2`}>
+        <PieChart size={20} /> Weekly Progress
+      </h3>
+      <span className={`text-xs font-bold ${theme.accentText} bg-gray-50 px-2 py-1 rounded-lg`}>Last 7 Days</span>
+    </div>
+    <div className="flex items-end justify-between gap-2 h-32">
+      {[40, 70, 30, 85, 50, 90, 60].map((h, i) => (
+        <div key={i} className="w-full flex flex-col justify-end items-center gap-1 group">
+           <div className={`w-full rounded-t-lg transition-all duration-500 ${theme.accent} group-hover:opacity-80`} style={{ height: `${h}%` }}></div>
+           <span className="text-[10px] font-bold text-gray-400">{['M','T','W','T','F','S','S'][i]}</span>
+        </div>
+      ))}
+    </div>
+    <div className="mt-6 flex justify-between text-sm">
+       <div className="text-center">
+         <p className="text-gray-400 text-xs">Tasks Done</p>
+         <p className={`font-bold text-xl ${theme.text}`}>{completedTasks}</p>
+       </div>
+       <div className="text-center">
+         <p className="text-gray-400 text-xs">Focus Hours</p>
+         <p className={`font-bold text-xl ${theme.text}`}>12.5h</p>
+       </div>
+    </div>
+  </div>
+);
+
+const TaskManager = ({ theme, tasks, onAddTask, onToggle, onDelete }) => {
+  const [title, setTitle] = useState("");
+  const [type, setType] = useState("Task");
+
+  return (
+    <div className={`${theme.card} rounded-3xl shadow-sm border ${theme.border} p-6 h-full animate-fade-in`}>
+      <h2 className={`text-2xl font-bold ${theme.text} mb-6`}>My Tasks & Goals</h2>
+      
+      <form onSubmit={(e) => { e.preventDefault(); onAddTask(title, type); setTitle(""); }} className="relative mb-8 flex gap-2">
+        <select value={type} onChange={(e) => setType(e.target.value)} className={`bg-transparent border ${theme.border} rounded-xl px-3 text-sm font-bold text-gray-600 outline-none`}>
+          <option value="Task">Task</option>
+          <option value="Exam">Exam</option>
+          <option value="Project">Project</option>
+        </select>
+        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What needs to be done?" className={`flex-1 pl-4 pr-12 py-3 ${theme.bg} rounded-xl border-0 focus:ring-2 focus:ring-opacity-50 transition-all ${theme.text} outline-none`} />
+        <button type="submit" className={`absolute right-2 top-1.5 bottom-1.5 w-9 ${theme.accent} text-white rounded-lg flex items-center justify-center`}><Plus size={18} /></button>
+      </form>
+
+      <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-2">
+        {tasks.length === 0 && <div className="text-center text-gray-400 py-10">No tasks yet. Enjoy your day!</div>}
+        {tasks.map(task => (
+          <div key={task.id} className={`flex items-center p-4 rounded-2xl hover:${theme.bg} transition-all group border ${task.type === 'Exam' ? 'border-red-100 bg-red-50/50' : 'border-transparent hover:border-gray-100'}`}>
+            <button onClick={() => onToggle(task.id, task.completed)} className={`mr-4 transition-all ${task.completed ? 'text-green-500' : `${theme.subtext} hover:${theme.accentText}`}`}>
+              <Check size={24} className={task.completed ? "bg-green-100 rounded-full p-0.5" : ""} />
+            </button>
+            <div className="flex-1">
+              <span className={`block font-medium text-lg ${task.completed ? 'text-gray-400 line-through' : theme.text}`}>{task.title}</span>
+              <div className="flex gap-2 mt-1">
+                {task.type === 'Exam' && <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-bold uppercase">Exam</span>}
+                <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{new Date(task.createdAt).toLocaleDateString()}</span>
+              </div>
+            </div>
+            <button onClick={() => onDelete(task.id)} className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 p-2 bg-white rounded-lg shadow-sm"><Trash2 size={18}/></button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const CalendarWidget = ({ theme, events, onAddEvent }) => {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+  const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+  const monthName = currentDate.toLocaleDateString('default', { month: 'long' });
+  const [newEventTitle, setNewEventTitle] = useState("");
+  const [showInput, setShowInput] = useState(false);
+
+  return (
+    <div className={`${theme.card} rounded-3xl shadow-sm border ${theme.border} p-6 animate-fade-in h-full`}>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className={`text-2xl font-bold ${theme.text}`}>Calendar</h2>
+        <div className="flex gap-2">
+          <button className={`p-2 rounded-lg ${theme.bg} ${theme.text}`} onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}><ChevronLeft size={20}/></button>
+          <span className={`px-4 py-2 font-bold ${theme.text} min-w-[120px] text-center`}>{monthName}</span>
+          <button className={`p-2 rounded-lg ${theme.bg} ${theme.text}`} onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}><ChevronRight size={20}/></button>
+        </div>
+      </div>
+
+      <div className="mb-4">
+        {!showInput ? (
+          <button onClick={() => setShowInput(true)} className={`w-full py-2 rounded-xl border-2 border-dashed ${theme.border} text-gray-400 text-sm font-bold hover:${theme.bg} flex items-center justify-center gap-2`}>
+            <Plus size={16} /> Add Future Event
+          </button>
+        ) : (
+          <form onSubmit={(e) => { e.preventDefault(); onAddEvent(newEventTitle, currentDate); setNewEventTitle(""); setShowInput(false); }} className="flex gap-2">
+            <input autoFocus type="text" value={newEventTitle} onChange={(e) => setNewEventTitle(e.target.value)} placeholder="Exam, Birthday..." className={`flex-1 px-3 py-2 rounded-xl border ${theme.border} text-sm outline-none`} />
+            <button type="submit" className={`px-4 py-2 rounded-xl ${theme.accent} text-white text-xs font-bold`}>Add</button>
+            <button type="button" onClick={() => setShowInput(false)} className="px-3 py-2 rounded-xl bg-gray-100 text-gray-500"><X size={16}/></button>
+          </form>
+        )}
+      </div>
+
+      <div className="grid grid-cols-7 gap-2 md:gap-3">
+        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+          <div key={i} className={`text-center text-xs font-bold ${theme.accentText} uppercase`}>{d}</div>
+        ))}
+        {Array(firstDay).fill(null).map((_, i) => <div key={`e-${i}`} />)}
+        {Array(daysInMonth).fill(null).map((_, i) => {
+          const day = i + 1;
+          const isToday = day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth();
+          const dayEvents = events.filter(e => {
+             const eDate = new Date(e.date);
+             return eDate.getDate() === day && eDate.getMonth() === currentDate.getMonth();
+          });
+
+          return (
+            <div key={day} className={`min-h-[60px] rounded-xl border flex flex-col p-1 transition-all ${isToday ? `${theme.bg} ${theme.accentText} border-[#B08968]` : `${theme.card} ${theme.border}`}`}>
+              <span className="text-xs font-bold ml-1">{day}</span>
+              <div className="flex flex-col gap-1 mt-1">
+                {dayEvents.map((ev, idx) => (
+                  <div key={idx} className={`text-[8px] px-1 rounded bg-blue-100 text-blue-700 truncate`}>{ev.title}</div>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  );
+};
+
+const FocusTimer = ({ theme }) => {
+  const [timeLeft, setTimeLeft] = useState(25 * 60);
+  const [isActive, setIsActive] = useState(false);
+  const [mode, setMode] = useState('focus'); 
+
+  useEffect(() => {
+    let interval = null;
+    if (isActive && timeLeft > 0) interval = setInterval(() => setTimeLeft(timeLeft - 1), 1000);
+    else if (timeLeft === 0) setIsActive(false);
+    return () => clearInterval(interval);
+  }, [isActive, timeLeft]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className={`${theme.card} rounded-3xl p-8 shadow-sm border ${theme.border} text-center flex flex-col items-center justify-center h-full`}>
+      <div className={`inline-flex p-1 rounded-xl mb-8 ${theme.bg}`}>
+        {['focus', 'short', 'long'].map((m) => (
+          <button key={m} onClick={() => { setMode(m); setIsActive(false); setTimeLeft(m === 'focus' ? 25*60 : m === 'short' ? 5*60 : 15*60); }} className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all ${mode === m ? `${theme.card} ${theme.accentText} shadow-sm` : 'text-gray-400'}`}>{m === 'focus' ? 'Study' : m + ' Break'}</button>
+        ))}
+      </div>
+      <div className={`text-7xl md:text-8xl font-bold font-mono tracking-tighter mb-10 ${theme.text}`}>{formatTime(timeLeft)}</div>
+      <div className="flex justify-center gap-4">
+        <button onClick={() => setIsActive(!isActive)} className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-xl transition-transform hover:scale-110 shadow-lg ${theme.accent}`}>
+          {isActive ? <Pause fill="currentColor" /> : <Play fill="currentColor" className="ml-1" />}
+        </button>
+        <button onClick={() => { setIsActive(false); setTimeLeft(mode === 'focus' ? 25*60 : mode === 'short' ? 5*60 : 15*60); }} className={`w-16 h-16 rounded-full flex items-center justify-center ${theme.bg} ${theme.text} hover:opacity-80 transition-colors`}>
+          <RefreshCw size={24} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const FitnessGuide = ({ theme }) => {
+  const [activeWorkout, setActiveWorkout] = useState(null);
+  const [timer, setTimer] = useState(0);
+  const [isWorkoutActive, setIsWorkoutActive] = useState(false);
+
+  useEffect(() => {
+    let interval = null;
+    if (isWorkoutActive && timer > 0) interval = setInterval(() => setTimer(timer - 1), 1000);
+    else if (timer === 0) setIsWorkoutActive(false);
+    return () => clearInterval(interval);
+  }, [isWorkoutActive, timer]);
+
+  const startWorkout = (workout) => {
+    setActiveWorkout(workout);
+    setTimer(workout.duration);
+    setIsWorkoutActive(true);
+  };
+
+  return (
+    <div className="animate-fade-in">
+       {activeWorkout && isWorkoutActive && (
+         <div className={`${theme.accent} rounded-3xl p-8 text-white mb-8 shadow-lg text-center relative overflow-hidden`}>
+            <div className="relative z-10">
+              <h3 className="text-2xl font-bold mb-2">{activeWorkout.title}</h3>
+              <div className="text-6xl font-bold font-mono my-6">{Math.floor(timer/60).toString().padStart(2,'0')}:{(timer%60).toString().padStart(2,'0')}</div>
+              <button onClick={() => setIsWorkoutActive(false)} className="bg-white/20 backdrop-blur px-6 py-2 rounded-full font-bold hover:bg-white/30">Stop Workout</button>
+            </div>
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-10 rounded-full blur-3xl -mr-10 -mt-10"></div>
+         </div>
+       )}
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {WORKOUTS.map(workout => (
+            <button key={workout.id} onClick={() => startWorkout(workout)} className={`${theme.card} p-6 rounded-2xl border ${theme.border} text-left hover:shadow-md transition-all group`}>
+               <div className="text-4xl mb-4">{workout.icon}</div>
+               <h4 className={`font-bold ${theme.text} text-lg`}>{workout.title}</h4>
+               <p className="text-xs text-gray-400 mt-1">{workout.desc}</p>
+               <div className={`mt-4 text-xs font-bold uppercase tracking-wider ${theme.accentText} opacity-0 group-hover:opacity-100 transition-opacity`}>Start Session →</div>
+            </button>
+          ))}
+       </div>
+    </div>
+  );
+};
+
+// --- MAIN APP ---
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [notification, setNotification] = useState(null);
+  
+  // Data State
+  const [currentTheme, setCurrentTheme] = useState('warm');
+  const [tasks, setTasks] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [schedule, setSchedule] = useState([]);
+  const [settings, setSettings] = useState({ hydrationEnabled: true, cycleEnabled: true });
+  
+  const theme = THEMES[currentTheme];
+
+  // --- AUTH ---
+  useEffect(() => {
+    const initAuth = async () => {
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        await signInWithCustomToken(auth, __initial_auth_token);
+      } else {
+        await signInAnonymously(auth);
+      }
+    };
+    initAuth();
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUserId(currentUser.uid);
+        onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'info'), (s) => { if(s.exists()) setUser(s.data()); else setLoading(false); });
+        onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'tasks'), (s) => setTasks(s.docs.map(d => ({id:d.id,...d.data()})).sort((a,b)=>b.createdAt-a.createdAt)));
+        onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'events'), (s) => setEvents(s.docs.map(d => ({id:d.id,...d.data(), date: new Date(d.data().date)}))));
+        onSnapshot(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'schedule'), (s) => setSchedule(s.docs.map(d => ({id:d.id,...d.data()}))));
+        onSnapshot(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'config'), (s) => { if(s.exists()) { const d = s.data(); setCurrentTheme(d.theme || 'warm'); setSettings({hydrationEnabled:d.hydrationEnabled??true, cycleEnabled:d.cycleEnabled??true}); }});
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // --- ALERTS (SMART FREQUENCY) ---
+  useEffect(() => {
+    if (!user) return;
+    const intervals = [];
+    
+    // Hydration: Every 2 hours (7200000ms) - set to 90mins for easier testing in demo
+    if (settings.hydrationEnabled) {
+      intervals.push(setInterval(() => { 
+        setNotification({ title: "Hydration Check 💧", message: "Time for a glass of water!", type: "water" }); 
+        setTimeout(() => setNotification(null), 6000); 
+      }, 5400000)); 
+    }
+
+    // Cycle: One-time check on load
+    if (user.gender === 'female' && settings.cycleEnabled) {
+      setTimeout(() => { 
+         setNotification({ title: "Cycle Love ❤️", message: "Remember to rest if you need to.", type: "cycle" }); 
+         setTimeout(() => setNotification(null), 8000); 
+      }, 5000);
+    }
+
+    return () => intervals.forEach(clearInterval);
+  }, [user, settings]);
+
+  // --- HANDLERS ---
+  const handleLogin = async (name, gender) => {
+    if (!userId) return;
+    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'profile', 'info'), { name, gender });
+    await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), { theme: 'warm', hydrationEnabled: true, cycleEnabled: true });
+    setUser({ name, gender });
+  };
+
+  const handleAddTask = async (title, type) => {
+    if (!userId || !title) return;
+    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'tasks'), { title, type, completed: false, createdAt: Date.now() });
+  };
+
+  const handleAddClass = async (day, title, time) => {
+    if(!userId || !title) return;
+    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'schedule'), { day, title, time });
+  };
+
+  const handleAddEvent = async (title, date) => {
+    if(!userId || !title) return;
+    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'events'), { title, date: date.toISOString(), createdAt: Date.now() });
+  };
+
+  const handleToggleTask = async (id, status) => { if(userId) await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id), { completed: !status }); };
+  const handleDeleteTask = async (id) => { if(userId) await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'tasks', id)); };
+  
+  const updateSettings = async (newS) => { 
+    if(userId) await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'settings', 'config'), { ...settings, theme: currentTheme, ...newS }); 
+  };
+
+  const triggerTestAlert = () => {
+    setNotification({ title: "Test Alert 🔔", message: "This is how your notifications will look.", type: "water" });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  if (!user) return <LoginScreen onLogin={handleLogin} loading={!userId} />;
+  
+  const completedCount = tasks.filter(t => t.completed).length;
+
+  const NavItem = ({ id, icon, label }) => (
+    <button onClick={() => { setActiveTab(id); setIsMobileMenuOpen(false); }} className={`flex items-center space-x-3 w-full p-3.5 rounded-2xl transition-all duration-200 group font-medium ${activeTab === id ? `${theme.primary} text-white shadow-md` : `${theme.subtext} hover:${theme.bg} hover:${theme.accentText}`}`}>
+      <div className={activeTab === id ? 'text-white' : 'text-gray-400'}>{icon}</div>
+      <span>{label}</span>
+    </button>
+  );
+
+  return (
+    <div className={`min-h-screen ${theme.bg} font-sans flex flex-col md:flex-row transition-colors duration-500`}>
+      {notification && <SystemNotification title={notification.title} message={notification.message} type={notification.type} onClose={() => setNotification(null)} />}
+
+      <aside className={`fixed inset-y-0 left-0 z-40 w-72 ${theme.card} border-r ${theme.border} p-6 transition-transform md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}>
+        <div className={`flex items-center gap-3 font-extrabold ${theme.text} text-2xl mb-10 px-2`}>
+          <div className={`w-10 h-10 bg-gradient-to-br ${theme.gradient} rounded-xl flex items-center justify-center text-white shadow-lg`}><Layout size={20} /></div>
+          LifeOS Pro
+        </div>
+        <div className={`mb-8 p-4 ${theme.bg} rounded-2xl flex items-center gap-3 border ${theme.border}`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${theme.accent}`}>{user.name.charAt(0)}</div>
+          <div><p className={`text-sm font-bold ${theme.text}`}>{user.name}</p><p className={`text-[10px] ${theme.subtext}`}>Student Plan</p></div>
+        </div>
+        <nav className="space-y-2">
+          <NavItem id="dashboard" icon={<Layout size={20} />} label="Dashboard" />
+          <NavItem id="tasks" icon={<ListTodo size={20} />} label="Task Manager" />
+          <NavItem id="timetable" icon={<Table size={20} />} label="Class Schedule" /> 
+          {user.gender === 'female' && <NavItem id="cycle" icon={<Moon size={20} />} label="Cycle Care" />}
+          <NavItem id="calendar" icon={<CalendarIcon size={20} />} label="Calendar" />
+          <NavItem id="focus" icon={<Clock size={20} />} label="Focus Timer" />
+          <NavItem id="fitness" icon={<Activity size={20} />} label="Fitness Guide" />
+          <NavItem id="settings" icon={<Settings size={20} />} label="Settings" />
+        </nav>
+      </aside>
+
+      <div className={`md:hidden bg-white/80 backdrop-blur-md border-b ${theme.border} p-4 flex justify-between items-center sticky top-0 z-30`}>
+         <div className={`font-bold text-xl ${theme.text}`}>LifeOS</div>
+         <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}><Menu className={theme.subtext}/></button>
+      </div>
+
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen scroll-smooth relative">
+        {activeTab === 'dashboard' && (
+          <div className="max-w-5xl mx-auto animate-fade-in">
+            <header className="mb-8">
+              <h1 className={`text-3xl font-bold ${theme.text}`}>Welcome back, {user.name}</h1>
+              <p className={theme.subtext}>Here is your daily overview.</p>
+            </header>
+            <ClockQuoteWidget theme={theme} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                {user.gender === 'female' && <CycleTracker theme={theme} />}
+                <ProgressReport theme={theme} completedTasks={completedCount} />
+              </div>
+              <div className="space-y-6">
+                <div className={`${theme.card} rounded-3xl p-6 shadow-sm border ${theme.border}`}>
+                  <h3 className={`font-bold ${theme.text} mb-4`}>Quick Actions</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                     <button className={`p-4 rounded-xl ${theme.bg} ${theme.text} font-bold flex flex-col items-center gap-2 hover:opacity-80 transition-all`}><Droplet size={24} className="text-blue-500"/> Hydrate</button>
+                     <button className={`p-4 rounded-xl ${theme.bg} ${theme.text} font-bold flex flex-col items-center gap-2 hover:opacity-80 transition-all`}><Activity size={24} className="text-green-500"/> Stretch</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {activeTab === 'tasks' && <div className="max-w-3xl mx-auto h-full"><TaskManager theme={theme} tasks={tasks} onAddTask={handleAddTask} onToggle={handleToggleTask} onDelete={handleDeleteTask} /></div>}
+        {activeTab === 'timetable' && <div className="max-w-4xl mx-auto h-full"><TimetableWidget theme={theme} schedule={schedule} onAddClass={handleAddClass} /></div>}
+        {activeTab === 'cycle' && user.gender === 'female' && <div className="max-w-2xl mx-auto animate-fade-in"><h2 className={`text-2xl font-bold ${theme.text} mb-6`}>Detailed Cycle Care</h2><CycleTracker theme={theme} detailed={true} /></div>}
+        {activeTab === 'calendar' && <div className="max-w-4xl mx-auto animate-fade-in h-full"><h2 className={`text-2xl font-bold ${theme.text} mb-6`}>Your Schedule</h2><CalendarWidget theme={theme} events={events} onAddEvent={handleAddEvent} /></div>}
+        {activeTab === 'focus' && <div className="max-w-2xl mx-auto h-[80vh]"><h2 className={`text-2xl font-bold ${theme.text} mb-6`}>Focus Mode</h2><FocusTimer theme={theme} /></div>}
+        {activeTab === 'fitness' && <div className="max-w-4xl mx-auto animate-fade-in"><h2 className={`text-2xl font-bold ${theme.text} mb-6`}>Personal Fitness Guide</h2><FitnessGuide theme={theme} /></div>}
+        
+        {activeTab === 'settings' && (
+          <div className="max-w-2xl mx-auto animate-fade-in">
+            <h2 className={`text-2xl font-bold ${theme.text} mb-6`}>App Settings</h2>
+            <div className={`${theme.card} rounded-3xl p-6 shadow-sm border ${theme.border} mb-6`}>
+              <h3 className={`font-bold ${theme.text} mb-4 flex items-center gap-2`}><Bell size={20}/> Notifications</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                  <span className="text-gray-700 font-medium">Hydration Alerts</span>
+                  <button onClick={() => updateSettings({ hydrationEnabled: !settings.hydrationEnabled })} className={`text-2xl ${settings.hydrationEnabled ? 'text-green-500' : 'text-gray-400'}`}>{settings.hydrationEnabled ? <ToggleRight size={32} fill="currentColor"/> : <ToggleLeft size={32}/>}</button>
+                </div>
+                {user.gender === 'female' && (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50">
+                    <span className="text-gray-700 font-medium">Cycle Care Alerts</span>
+                    <button onClick={() => updateSettings({ cycleEnabled: !settings.cycleEnabled })} className={`text-2xl ${settings.cycleEnabled ? 'text-green-500' : 'text-gray-400'}`}>{settings.cycleEnabled ? <ToggleRight size={32} fill="currentColor"/> : <ToggleLeft size={32}/>}</button>
+                  </div>
+                )}
+                <button onClick={triggerTestAlert} className="text-xs text-blue-500 underline mt-2">Test Notification</button>
+              </div>
+            </div>
+            <div className={`${theme.card} rounded-3xl p-6 shadow-sm border ${theme.border}`}>
+              <h3 className={`font-bold ${theme.text} mb-4`}>Theme Appearance</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {Object.keys(THEMES).map((t) => (
+                  <button key={t} onClick={() => updateSettings({ theme: t })} className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${currentTheme === t ? `${theme.border} ${theme.bg}` : 'border-transparent bg-gray-50'}`}>
+                    <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${THEMES[t].gradient}`}></div>
+                    <span className={`text-xs font-bold capitalize ${theme.text}`}>{t}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
